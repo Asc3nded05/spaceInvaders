@@ -42,7 +42,10 @@ let bulletArray = [];
 let bulletVelocityY = -10; //bullet moving speed
 
 let score = 0;
+let highScore = 0;
 let gameOver = false;
+
+let continueAnimation = true; // Flag to control animation
 
 window.onload = function() {
     board = document.getElementById("board");
@@ -71,9 +74,12 @@ window.onload = function() {
 }
 
 function update() {
-    requestAnimationFrame(update);
+    if (continueAnimation) {
+        requestAnimationFrame(update);
+    }
 
     if (gameOver) {
+        gameOverScreen();
         return;
     }
 
@@ -83,21 +89,33 @@ function update() {
     context.drawImage(shipImg, ship.x, ship.y, ship.width, ship.height);
 
     //alien
+    let hitBorder = false;
     for (let i = 0; i < alienArray.length; i++) {
         let alien = alienArray[i];
         if (alien.alive) {
             alien.x += alienVelocityX;
 
-            //if alien touches the borders
+            // Check if any alien hits the borders
             if (alien.x + alien.width >= board.width || alien.x <= 0) {
-                alienVelocityX *= -1;
-                alien.x += alienVelocityX*2;
-
-                //move all aliens up by one row
-                for (let j = 0; j < alienArray.length; j++) {
-                    alienArray[j].y += alienHeight;
-                }
+                hitBorder = true;
             }
+        }
+    }
+
+    // If any alien hits the borders, reverse direction and move all aliens down
+    if (hitBorder) {
+        alienVelocityX *= -1;
+        for (let i = 0; i < alienArray.length; i++) {
+            let alien = alienArray[i];
+            alien.x += alienVelocityX; // Correct the position after reversing direction
+            alien.y += alienHeight;
+        }
+    }
+
+    // Draw aliens
+    for (let i = 0; i < alienArray.length; i++) {
+        let alien = alienArray[i];
+        if (alien.alive) {
             context.drawImage(alienImg, alien.x, alien.y, alien.width, alien.height);
 
             if (alien.y >= ship.y) {
@@ -206,4 +224,81 @@ function detectCollision(a, b) {
            a.x + a.width > b.x &&   //a's top right corner passes b's top left corner
            a.y < b.y + b.height &&  //a's top left corner doesn't reach b's bottom left corner
            a.y + a.height > b.y;    //a's bottom left corner passes b's top left corner
+}
+
+function gameOverScreen() {
+    // Lighten the screen
+    context.fillStyle = "rgba(182, 182, 182, 0.5)";
+    context.fillRect(0, 0, board.width, board.height);  
+
+    // Display the score background
+    context.fillStyle = "white";
+    context.fillRect(board.width / 4, board.height / 4, board.width / 2, board.height / 2);
+
+    // Center the text
+    context.fillStyle = "black";
+    context.font = "24px Courier";
+
+    if (score > highScore) {
+        highScore = score;
+    }
+
+    let gameOverText = "Game Over";
+    let highScoreText = "High Score: " + highScore;
+    let scoreText = " Score: " + score;
+
+    let gameOverTextWidth = context.measureText(gameOverText).width;    
+    let highScoreTextWidth = context.measureText(highScoreText).width;
+    let scoreTextWidth = context.measureText(scoreText).width;
+
+    context.fillText(gameOverText, (board.width - gameOverTextWidth) / 2, board.height / 2 - 60);
+    context.fillText(highScoreText, (board.width - highScoreTextWidth) / 2, board.height / 2 - 20);
+    context.fillText(scoreText, (board.width - scoreTextWidth) / 2, board.height / 2 + 20);
+
+    let restartButton = document.getElementById("restartButton");
+    if (!restartButton) {
+        // Create and display the restart button
+        let restartButton = document.createElement("button");
+        restartButton.id = "restartButton";
+        restartButton.innerHTML = "Restart";
+        document.body.appendChild(restartButton);
+
+        // Position the button
+        restartButton.style.display = "block";
+
+        // Add event listener to restart the game
+        restartButton.addEventListener("click", restartGame);
+    }
+    else {
+        restartButton.style.display = "block";
+    }
+
+    // Pause the animation
+    continueAnimation = false;
+}
+
+function restartGame() {
+    console.log("Reset Game");
+    // Reset game variables
+    score = 0;
+    gameOver = false;
+
+    alienArray = [];
+    alienRows = 2;
+    alienColumns = 3;
+    alienVelocityX = 1;
+    alienCount = 0;
+
+    bulletArray = [];
+    bulletVelocityY = -10;
+
+    createAliens();
+
+    // Hide the restart button
+    let restartButton = document.getElementById("restartButton");
+    restartButton.style.display = "none";
+
+    // Start the game loop again
+    continueAnimation = true;
+    requestAnimationFrame(update);
 }

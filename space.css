@@ -6,3 +6,13 @@ body {
 #board {
     background-color: black;
 }
+
+#restartButton {
+    position: absolute;
+    top: 59%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 10px 20px;
+    font-size: 16px;
+    display: none; /* Hide the button initially */
+}
