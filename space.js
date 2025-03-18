@@ -14,6 +14,7 @@ let shipHeight = tileSize;
 let shipX = tileSize * columns/2 - tileSize;
 let shipY = tileSize * rows - tileSize*2;
 
+
 let ship = {
     x : shipX,
     y : shipY,
@@ -21,8 +22,11 @@ let ship = {
     height : shipHeight
 }
 
+
+let pauseImg;
 let shipImg;
 let shipVelocityX = tileSize; //ship moving speed
+
 
 //aliens
 let alienArray = [];
@@ -58,6 +62,29 @@ window.onload = function() {
     // context.fillRect(ship.x, ship.y, ship.width, ship.height);
 
     //load images
+
+    //create pause button
+    pauseImg = new Image();
+    pauseImg.src = "./pausebutton.png";
+    pauseImg.onload = function() {
+       drawPauseButton();
+    }
+    //board click event listener
+    board.addEventListener('click', function(event){
+        const rect = board.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        if (x >= boardWidth-tileSize && x <= boardWidth-tileSize + pauseImg.width && y >= tileSize *.25 && y <= tileSize *.25 + pauseImg.height){
+            // Click is inside the image
+            togglePause();
+            console.log('Image clicked!');
+    }else{
+        console.log("Image Not clicked")
+    }
+});
+
+
+    //create ship
     shipImg = new Image();
     shipImg.src = "./ship.png";
     shipImg.onload = function() {
@@ -70,7 +97,21 @@ window.onload = function() {
 
     requestAnimationFrame(update);
     document.addEventListener("keydown", moveShip);
-    document.addEventListener("keyup", shoot);
+    document.addEventListener("keyup", shoot);  
+}
+
+function drawPauseButton(){
+    context.drawImage(pauseImg, boardWidth - tileSize, tileSize *.25, tileSize *0.8, tileSize*0.8);
+}
+function togglePause() {
+    continueAnimation = !continueAnimation; // Toggle the pause state
+    pauseImg.src = "./playbutton.png"
+    drawPauseButton();
+    if (continueAnimation) {
+        requestAnimationFrame(update); // Resume the game if unpaused
+        pauseImg.src = "./pausebutton.png";
+        drawPauseButton();
+    }
 }
 
 function update() {
@@ -87,6 +128,7 @@ function update() {
 
     //ship
     context.drawImage(shipImg, ship.x, ship.y, ship.width, ship.height);
+    drawPauseButton();
 
     //alien
     let hitBorder = false;
